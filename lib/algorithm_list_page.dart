@@ -1,3 +1,4 @@
+import 'package:crpto/Hill_Cipher_screen.dart';
 import 'package:crpto/euler_fermat_screen.dart';
 import 'package:crpto/modular_arithmetic_screen.dart';
 import 'package:crpto/playfair_cipher_screen.dart';
@@ -5,6 +6,8 @@ import 'package:crpto/rail_fence_screen.dart';
 import 'package:crpto/row_column_transposition_screen.dart';
 import 'package:crpto/vigenere_cipher_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'Game.dart';
 import 'caesar_cipher_screen.dart';
 import 'double_transposition_screen.dart';
 
@@ -16,7 +19,13 @@ class AlgorithmListPage extends StatelessWidget {
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: const Text('Encryption Algorithms'),
+        title: Text(
+          'Encryption Algorithms',
+          style: GoogleFonts.poppins(
+            fontWeight: FontWeight.bold,
+            color: const Color(0xffffffff),  // purple color from your gradient
+          ),
+        ),
         centerTitle: true,
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -24,7 +33,7 @@ class AlgorithmListPage extends StatelessWidget {
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [Color(0xff1e3c72), Color(0xff2a5298)],
+            colors:[Color(0xffb683d1), Color(0xff5184d6)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -32,6 +41,16 @@ class AlgorithmListPage extends StatelessWidget {
         child: ListView(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 100),
           children: [
+            _buildAlgorithmItem(
+              context,
+              icon: Icons.lock_outline,
+              title: 'Game',
+              description: 'Encrypt/Decrypt with a shift value.',
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const EscapeRoomPuzzle()),
+              ),
+            ),
             _buildAlgorithmItem(
               context,
               icon: Icons.lock_outline,
@@ -74,6 +93,16 @@ class AlgorithmListPage extends StatelessWidget {
             ),
             _buildAlgorithmItem(
               context,
+              icon: Icons.grid_view_sharp,
+              title: 'Hill Cipher',
+              description: 'Encrypt/Decrypt using digraphs.',
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const HillCipherScreen()),
+              ),
+            ),
+            _buildAlgorithmItem(
+              context,
               icon: Icons.table_chart,
               title: 'Row-Column Transposition',
               description: 'Encrypt/Decrypt using row-column order.',
@@ -109,7 +138,7 @@ class AlgorithmListPage extends StatelessWidget {
               description: 'Encrypt/Decrypt using number theory.',
               onTap: () => Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const EulerFermatScreen()),
+                MaterialPageRoute(builder: (context) => const EulerTheoremScreen()),
               ),
             ),
           ],

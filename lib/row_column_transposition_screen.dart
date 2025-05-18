@@ -20,9 +20,9 @@ class _RowColumnTranspositionScreenState extends State<RowColumnTranspositionScr
 
   void process() {
     final text = textController.text.replaceAll(' ', '').toUpperCase();
-    final key = keyController.text.toUpperCase();
+    final key = keyController.text;
 
-    if (text.isEmpty || key.isEmpty) {
+    if (text.isEmpty || key.isEmpty || !RegExp(r'^\d+$').hasMatch(key)) {
       setState(() {
         result = '';
         matrix = [];
@@ -32,30 +32,35 @@ class _RowColumnTranspositionScreenState extends State<RowColumnTranspositionScr
       return;
     }
 
-    final columnOrder = getKeyOrder(key);
+    final columnOrder = key.split('').map((e) => int.parse(e)).toList();
+    final normalizedOrder = getKeyOrder(columnOrder);
     if (isEncrypt) {
-      encrypt(text, columnOrder);
+      encrypt(text, normalizedOrder, columnOrder);
     } else {
-      decrypt(text, columnOrder);
+      decrypt(text, normalizedOrder, columnOrder);
     }
   }
 
-  List<int> getKeyOrder(String key) {
-    final letters = key.split('');
-    final sorted = [...letters]..sort();
-    return letters.map((char) => sorted.indexOf(char)).toList();
+  List<int> getKeyOrder(List<int> key) {
+    final sorted = [...key]..sort();
+    return key.map((k) => sorted.indexOf(k)).toList();
   }
 
-  void encrypt(String text, List<int> columnOrder) {
+  void encrypt(String text, List<int> columnOrder, List<int> originalKey) {
     steps.clear();
     matrix.clear();
 
     final columns = columnOrder.length;
     final rows = (text.length / columns).ceil();
-    List<List<String>> grid = List.generate(rows, (_) => List.filled(columns, ''));
+
+    List<List<String>> grid = List.generate(rows + 1, (_) => List.filled(columns, ''));
+
+    for (int i = 0; i < columns; i++) {
+      grid[0][i] = originalKey[i].toString(); // first row is key
+    }
 
     int index = 0;
-    for (int r = 0; r < rows; r++) {
+    for (int r = 1; r <= rows; r++) {
       for (int c = 0; c < columns; c++) {
         if (index < text.length) {
           grid[r][c] = text[index++];
@@ -66,11 +71,10 @@ class _RowColumnTranspositionScreenState extends State<RowColumnTranspositionScr
     }
 
     StringBuffer buffer = StringBuffer();
-
     for (int i = 0; i < columns; i++) {
       int colIndex = columnOrder.indexOf(i);
       String colText = '';
-      for (int r = 0; r < rows; r++) {
+      for (int r = 1; r <= rows; r++) {
         colText += grid[r][colIndex];
         buffer.write(grid[r][colIndex]);
       }
@@ -87,19 +91,24 @@ class _RowColumnTranspositionScreenState extends State<RowColumnTranspositionScr
     });
   }
 
-  void decrypt(String cipher, List<int> columnOrder) {
+  void decrypt(String cipher, List<int> columnOrder, List<int> originalKey) {
     steps.clear();
     matrix.clear();
 
     final columns = columnOrder.length;
     final rows = (cipher.length / columns).ceil();
-    List<List<String>> grid = List.generate(rows, (_) => List.filled(columns, ''));
+
+    List<List<String>> grid = List.generate(rows + 1, (_) => List.filled(columns, ''));
+
+    for (int i = 0; i < columns; i++) {
+      grid[0][i] = originalKey[i].toString(); // first row is key
+    }
 
     int index = 0;
     for (int i = 0; i < columns; i++) {
       int colIndex = columnOrder.indexOf(i);
       String colText = '';
-      for (int r = 0; r < rows; r++) {
+      for (int r = 1; r <= rows; r++) {
         if (index < cipher.length) {
           grid[r][colIndex] = cipher[index++];
           colText += grid[r][colIndex];
@@ -113,7 +122,7 @@ class _RowColumnTranspositionScreenState extends State<RowColumnTranspositionScr
     }
 
     StringBuffer buffer = StringBuffer();
-    for (int r = 0; r < rows; r++) {
+    for (int r = 1; r <= rows; r++) {
       for (int c = 0; c < columns; c++) {
         buffer.write(grid[r][c]);
       }
@@ -203,16 +212,28 @@ class _RowColumnTranspositionScreenState extends State<RowColumnTranspositionScr
                 labelText: isEncrypt ? 'Enter Text' : 'Enter Cipher Text',
                 border: const OutlineInputBorder(),
               ),
-              onChanged: (_) => process(),
+              onChanged: (_) {
+                process();
+                if (showVisualization) setState(() {});
+              },
             ),
             const SizedBox(height: 12),
             TextField(
               controller: keyController,
               decoration: const InputDecoration(
-                labelText: 'Enter Key (text or number)',
+                labelText: 'Enter Numeric Key (e.g. 3142)',
                 border: OutlineInputBorder(),
               ),
-              onChanged: (_) => process(),
+              keyboardType: TextInputType.number,
+              onChanged: (_) {
+                process();
+                if (showVisualization) setState(() {});
+              },
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Note: Key must be numeric (e.g. 3142).',
+              style: TextStyle(color: Colors.red),
             ),
             const SizedBox(height: 16),
             if (result.isNotEmpty)
